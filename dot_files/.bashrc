@@ -124,23 +124,23 @@ print_header(){
 }
 
 
-PROMPT_COMMAND=('first_enter' 'print_header')
 
 if [ "$color_prompt" = yes ]; then
 #   Default PS1
 #   PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ 
-#   PS1='$ '
+  PS1="${_GRN}\u${_LGRA}@${_YEL}\h:${_CYN}\w${_GRN}$ ${_LGRA}"
 
 # tput setab 234 # If we want to use different background
 # \033[39;49m # This resets the background
 
-
-    PS1="
-\[$(tput setaf 2)\]\
-\[$(tput sc; tput home; tput il 2; tput cuf $(($COLUMNS/2 - 14)))\]\u\
-\[$(tput setaf 7)\]@\[$(tput setaf 13)\]\h\[$(tput setaf 7)\]   \t
-\[$(tput setaf 6)\] \$PWD
-\[$(tput rc)\]\[$(tput setaf 2)\] $\[$(tput setaf 7)\] "
+# This is currently not working with completions
+# PROMPT_COMMAND=('first_enter' 'print_header')
+#     PS1="
+# \[$(tput setaf 2)\]\
+# \[$(tput sc; tput home; tput il 2; tput cuf $(($COLUMNS/2 - 14)))\]\u\
+# \[$(tput setaf 7)\]@\[$(tput setaf 13)\]\h\[$(tput setaf 7)\]   \t
+# \[$(tput setaf 6)\] \$PWD
+# \[$(tput rc)\]\[$(tput setaf 2)\] $\[$(tput setaf 7)\] "
 
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
