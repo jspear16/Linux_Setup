@@ -2,6 +2,18 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
+######### PERSONAL SECTION #########
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash_aliases, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+lines=0
+
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
@@ -14,6 +26,7 @@ HISTCONTROL=ignoreboth
 
 # append to the history file, don't overwrite it
 shopt -s histappend
+shopt -s autocd     # Allows cd into a directory without putting 'cd ' in front of the directory name
 
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
 HISTSIZE=1000
@@ -55,13 +68,85 @@ if [ -n "$force_color_prompt" ]; then
 	color_prompt=
     fi
 fi
+# lines=2
+
+entered=0
+
+# Received functions from https://unix.stackexchange.com/questions/88296/get-vertical-cursor-position
+pos_num(){
+    local CURPOS
+    read -sdR -p $'\E[6n' CURPOS
+    CURPOS=${CURPOS#*[} # Strip decoration characters <ESC>[
+    echo "${CURPOS}"    # Return position in "row;col" format
+}
+row_num(){
+    local COL
+    local ROW
+    IFS=';' read -sdR -p $'\E[6n' ROW COL
+    echo "${ROW#*[}"
+}
+col_num(){
+    local COL
+    local ROW
+    IFS=';' read -sdR -p $'\E[6n' ROW COL
+    echo "${COL}"
+}
+
+# Functions for the PROMPT_COMMAND. These happen right before the PS1 prompt is printed
+first_enter(){
+    if [[ $entered -eq 0 ]]; then
+        entered=1
+        # In the future, can potentially add background color using something like the following
+        # r=0
+        # g=0
+        # b=255
+        # printf '\e[0;48;2;%s;%s;%sm%03d;%03d;%03d ' "$r" "$g" "$b" "$r" "$g" "$b"
+        # tput clear
+    fi
+}
+print_header(){
+    # Check if row_num is NOT equal to lines on
+    if ! [[ $(row_num) -eq `tput lines` ]]; then
+        tput sc
+        tput home
+        tput dl 2
+        tput rc
+        tput cuu1
+    else
+        tput cud1
+    fi
+
+    if [[ $(row_num) -lt 2 ]]; then
+        tput cup 2 0
+        tput cuu1
+    fi
+
+}
+
+
+PROMPT_COMMAND=('first_enter' 'print_header')
 
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+#   Default PS1
+#   PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ 
+#   PS1='$ '
+
+# tput setab 234 # If we want to use different background
+# \033[39;49m # This resets the background
+
+
+    PS1="
+\[$(tput setaf 2)\]\
+\[$(tput sc; tput home; tput il 2; tput cuf $(($COLUMNS/2 - 14)))\]\u\
+\[$(tput setaf 7)\]@\[$(tput setaf 13)\]\h\[$(tput setaf 7)\]   \t
+\[$(tput setaf 6)\] \$PWD
+\[$(tput rc)\]\[$(tput setaf 2)\] $\[$(tput setaf 7)\] "
+
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
 unset color_prompt force_color_prompt
+
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
@@ -96,14 +181,6 @@ alias l='ls -CF'
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-# Alias definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_aliases, instead of adding them here directly.
-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
-
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
@@ -115,6 +192,21 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+
+######### END PERSONAL SECTION #########
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ######## WORK SECTION #########
