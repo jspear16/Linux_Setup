@@ -1,3 +1,6 @@
+#!/bin/bash
+
+# ~/.shellcheckrc
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
@@ -8,7 +11,11 @@
 # ~/.bash_aliases, instead of adding them here directly.
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
+
+### Bashrc Configuration ###
+
 if [ -f ~/.bash_aliases ]; then
+    # shellcheck source=/dev/null
     . ~/.bash_aliases
 fi
 
@@ -127,8 +134,9 @@ print_header(){
 
 if [ "$color_prompt" = yes ]; then
 #   Default PS1
-#   PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ 
-  PS1="${_GRN}\u${_LGRA}@${_YEL}\h:${_CYN}\w${_GRN}$ ${_LGRA}"
+  PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+#   PS1="${_GRN}\u${_LGRA}@${_PUR}\h${_LGRA}:${_CYN}\w${_GRN}$ ${_LGRA}"
+#   PS1='$ '
 
 # tput setab 234 # If we want to use different background
 # \033[39;49m # This resets the background
@@ -192,6 +200,8 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+
+
 
 ######### END PERSONAL SECTION #########
 
@@ -683,6 +693,16 @@ start_setupVCan()
     sudo modprobe vcan
     sudo ip link add dev "can$num" type vcan
     sudo ip link set up "can$num"
+}
+start_setupHWCan()
+{
+    local num=0
+    if [ $# -eq 1 ]; then
+        num=$1
+    fi
+    sudo modprobe can
+    sudo ip link add dev "can$num" type can
+    sudo ip link set "can$num" up txqueuelen 1000 type can bitrate 250000 sample-point 0.7 restart-ms 500
 }
 start_startWireguard()
 {
