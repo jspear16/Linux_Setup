@@ -1,4 +1,4 @@
-
+#!/bin/bash
 # Colors (L = Light; D = Dark)
 _BLK='\033[0;30m'
 _RED='\033[0;31m'
@@ -36,8 +36,65 @@ _RESET='\e(B\e[m'
 _CLEAR='\e[H\e[2J'
 
 
-# My aliases
-alias LS='ls -goAGh --time-style="+%F %T%Z"'
+##### Alias functions #####
+# Sudo last command
+JS_sudo_last_command() { # do sudo, or sudo the last command if no argument given
+    if [[ $# == 0 ]]; then
+        sudo "$(history -p '!!')"
+    else
+        sudo "$@"
+    fi
+    return 0;
+}
+
+# Special function for LS
+JS_special_ls() {
+    if ! [[ $# == 0 ]]; then
+        ls -goAGh --time-style="+%F %T%Z" $1 
+    else
+        ls -goAGh --time-style="+%F %T%Z" . 
+    fi
+    return 0;
+}
+
+# Run a shell script through the shellcheck command and run if it passes
+JS_shellcheck_and_run() {
+    if ! [[ $# == 1 ]]; then
+        echo -e "${_RED}ERROR\n\t${_NC}Please enter a file to check and run"        
+        return 1;
+    fi
+    shellcheck $1 && "./$1";
+    return 0;
+}
+
+
+JS_help_info() {
+    echo -e "The following are a list of helpful functions to use with this environment setup:
+
+    ${_BOLD}JS_sudo_last_command (alias: s)${_RESET}
+        Runs the last command as a super user
+
+    ${_BOLD}JS_special_ls (alias: LS)${_RESET}
+        Perform basic functionality to run an advanced ls command
+
+    ${_BOLD}JS_shellcheck_and_run (alias: run)${_RESET}
+        Run a shell script through the schellcheck linter program and run if there are no errors
+
+    ${_BOLD}JS_help_info (alias: h)${_RESET}
+        Display this help information
+
+"
+    echo -e "The following are a list of downloadable tools to use with this environment setup:
+
+    shellcheck
+
+"
+
+    return 0;
+}
+
+##### My aliases #####
+alias LS='JS_special_ls'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
@@ -45,4 +102,7 @@ alias .-='cd -'
 alias ~='cd ~'
 alias e='echo -e'
 alias c='clear'
-alias s='source ~/.bashrc'
+alias s='JS_sudo_last_command'
+alias t='touch'
+alias h='JS_help_info'
+alias run='JS_shellcheck_and_run'
