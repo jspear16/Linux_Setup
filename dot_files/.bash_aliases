@@ -63,12 +63,25 @@ JS_shellcheck_and_run() {
         echo -e "${_RED}ERROR\n\t${_NC}Please enter a file to check and run"        
         return 1;
     fi
-    shellcheck $1 && "./$1";
+    shellcheck -x $1 && "./$1";
     return 0;
 }
 
 
 JS_help_info() {
+    echo -e "
+    ---------------------------------------------------------------------------------
+    |   __________   __________   _________   __________   __________   __________  |
+    |  |___    ___| |   _______| |   ___   | |   _______| |   ____   | |   ____   | |
+    |      |  |     |  |         |  |   |  | |  |         |  |    |  | |  |    |  | |
+    |      |  |     |  |_______  |  |___|  | |  |_____    |  |____|  | |  |____|  | |
+    |      |  |     |_______   | |   ______| |   _____|   |   ____   | |      ____| |
+    |   _  |  |             |  | |  |        |  |         |  |    |  | |  |\  \     |
+    |  | |_|  |      _______|  | |  |        |  |_______  |  |    |  | |  | \  \    |
+    |  |______|     |__________| |__|        |__________| |__|    |__| |__|  \__\   |
+    ---------------------------------------------------------------------------------
+    "
+    echo -e "This tooltip is used to give basic instruction for Joseph's environment!\n"
     echo -e "The following are a list of helpful functions to use with this environment setup:
 
     ${_BOLD}JS_sudo_last_command (alias: s)${_RESET}
