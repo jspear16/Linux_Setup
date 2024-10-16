@@ -10,7 +10,7 @@
         "tab.border":  "#000000",
         "editorGroupHeader.tabsBorder": "#000000",
         "editorGroupHeader.border": "#000000",
-        "tab.activeBackground": "#4d0b16"
+        "tab.activeBackground": "#431010"
     },
     "editor.renderLineHighlight": "all",
 	"editor.smoothScrolling": true,
@@ -28,6 +28,7 @@
 	"editor.hover.delay": 100,
 	"editor.hover.hidingDelay": 50,
 	"editor.insertSpaces": false,
-    "editor.fontFamily": "'Anonymous Pro', 'Futura Bk BT','Droid Sans Mono', 'monospace', monospace",
-	"editor.letterSpacing": -1,
+    "editor.fontFamily": "Futura Bk BT','Droid Sans Mono', 'monospace', monospace",
+    // "editor.fontFamily": "'Anonymous Pro', 'Futura Bk BT','Droid Sans Mono', 'monospace', monospace",
+	// "editor.letterSpacing": -1,
 }
