@@ -5,7 +5,7 @@
     "workbench.colorCustomizations": {
         "editorLineNumber.activeForeground": "#ff6666",
         "editorBracketMatch.border": "#059e00b2",
-        "editorGutter.background": "#2600ff10",
+        "editorGutter.background": "#0000008c"
     },
     "editor.renderLineHighlight": "all",
 	"editor.smoothScrolling": true,
