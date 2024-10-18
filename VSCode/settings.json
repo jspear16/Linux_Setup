@@ -26,11 +26,12 @@
 	"window.title": "${dirty}${rootName}${separator}${activeEditorShort} ${dirty}",
 	"editor.tabCompletion": "onlySnippets",
     "editor.fontSize": 17,
+	"files.insertFinalNewline": true,
 	"editor.guides.bracketPairs": "active",
 	"editor.hover.delay": 100,
 	"editor.hover.hidingDelay": 50,
     "window.zoomLevel": 1,
-    "editor.fontFamily": "Futura Bk BT','Droid Sans Mono', 'monospace', monospace",
+    "editor.fontFamily": "'Futura','Droid Sans Mono', 'monospace', monospace",
     // "editor.fontFamily": "'Anonymous Pro', 'Futura Bk BT','Droid Sans Mono', 'monospace', monospace",
 	// "editor.letterSpacing": -1,
 }
