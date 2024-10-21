@@ -103,8 +103,12 @@ The following are a list of downloadable tools to use with this environment setu
     shellcheck
 
 The following are the associated aliases for this setup:
-"
+";
+
     alias;
+
+    echo -e "\n==================== End of Help message ====================\n";
+
 
     return 0;
 }
