@@ -102,7 +102,9 @@ The following are a list of downloadable tools to use with this environment setu
 
     shellcheck
 
+The following are the associated aliases for this setup:
 "
+    alias;
 
     return 0;
 }
@@ -119,6 +121,6 @@ alias e='echo -e'
 alias c='clear'
 alias s='JS_sudo_last_command'
 alias t='touch'
-alias h='JS_help_info'
+alias h='JS_help_info | less -r'
 alias run='JS_shellcheck_and_run'
 alias gl='git log --oneline -n 10'
