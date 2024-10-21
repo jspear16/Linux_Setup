@@ -59,11 +59,28 @@ JS_special_ls() {
 
 # Run a shell script through the shellcheck command and run if it passes
 JS_shellcheck_and_run() {
-    if ! [[ $# == 1 ]]; then
+    if ! [[ $# -ge 1 ]]; then
         echo -e "${_RED}ERROR\n\t${_NC}Please enter a file to check and run"        
         return 1;
     fi
-    shellcheck -x $1 && "./$1";
+
+    # Permissions check
+    perm_val=$(ls -l "$1" | cut -c 4);
+
+    if ! [[ $perm_val == 'x' ]]; then
+        echo "You don't have permission to execute this file.";
+        read -p "Would you like to give access to execute this file? [Y/n] " ans;
+
+        if [[ $ans == 'Y' || $ans == 'y' || -z "${ans}" ]]; then
+            chmod +x "$1";
+        else
+            echo "You must have execution permissions to run this program";
+            return 1;
+        fi
+    fi
+
+    # Run shellcheck and then run the program
+    shellcheck -x "$1" && ./"$1" "${*:2}";
     return 0;
 }
 
