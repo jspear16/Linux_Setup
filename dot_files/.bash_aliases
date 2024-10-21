@@ -80,9 +80,10 @@ JS_help_info() {
     |  | |_|  |      _______|  | |  |        |  |_______  |  |    |  | |  | \  \    |
     |  |______|     |__________| |__|        |__________| |__|    |__| |__|  \__\   |
     ---------------------------------------------------------------------------------
-    "
-    echo -e "This tooltip is used to give basic instruction for Joseph's environment!\n"
-    echo -e "The following are a list of helpful functions to use with this environment setup:
+    
+    This tooltip is used to give basic instruction for Joseph's environment!
+
+    The following are a list of helpful functions to use with this environment setup:
 
     ${_BOLD}JS_sudo_last_command (alias: s)${_RESET}
         Runs the last command as a super user
@@ -96,8 +97,8 @@ JS_help_info() {
     ${_BOLD}JS_help_info (alias: h)${_RESET}
         Display this help information
 
-"
-    echo -e "The following are a list of downloadable tools to use with this environment setup:
+
+The following are a list of downloadable tools to use with this environment setup:
 
     shellcheck
 
@@ -107,7 +108,8 @@ JS_help_info() {
 }
 
 ##### My aliases #####
-alias LS='JS_special_ls'
+# alias LS='JS_special_ls'
+alias LS='ls -la'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
@@ -119,3 +121,4 @@ alias s='JS_sudo_last_command'
 alias t='touch'
 alias h='JS_help_info'
 alias run='JS_shellcheck_and_run'
+alias gl='git log --oneline -n 10'
