@@ -148,6 +148,6 @@ alias gl='git log --oneline -n 10'
 
 
 ##### My work aliases #####
-alias cdSIM='cd ~/supportsim/skipline/projects/'
-alias cdSKL='cd ~/workspace/skipline/projects/'
-alias cdSYS='cd ~/skiprepo/production/systems/'
+alias cdSim='cd ~/supportsim/skipline/projects/'
+alias cdSkl='cd ~/workspace/skipline/projects/'
+alias cdSys='cd ~/skiprepo/production/systems/'
