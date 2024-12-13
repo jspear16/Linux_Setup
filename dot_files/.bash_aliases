@@ -50,9 +50,9 @@ JS_sudo_last_command() { # do sudo, or sudo the last command if no argument give
 # Special function for LS
 JS_special_ls() {
     if ! [[ $# == 0 ]]; then
-        ls -goAGh --time-style="+%F %T%Z" $1 
+        ls -goAGh --time-style="+%F %T%Z" $1
     else
-        ls -goAGh --time-style="+%F %T%Z" . 
+        ls -goAGh --time-style="+%F %T%Z" .
     fi
     return 0;
 }
@@ -60,7 +60,7 @@ JS_special_ls() {
 # Run a shell script through the shellcheck command and run if it passes
 JS_shellcheck_and_run() {
     if ! [[ $# -ge 1 ]]; then
-        echo -e "${_RED}ERROR\n\t${_NC}Please enter a file to check and run"        
+        echo -e "${_RED}ERROR\n\t${_NC}Please enter a file to check and run"
         return 1;
     fi
 
@@ -97,7 +97,7 @@ JS_help_info() {
     |  | |_|  |      _______|  | |  |        |  |_______  |  |    |  | |  | \  \    |
     |  |______|     |__________| |__|        |__________| |__|    |__| |__|  \__\   |
     ---------------------------------------------------------------------------------
-    
+
     This tooltip is used to give basic instruction for Joseph's environment!
 
     The following are a list of helpful functions to use with this environment setup:
@@ -145,3 +145,9 @@ alias t='touch'
 alias h='JS_help_info | less -r'
 alias run='JS_shellcheck_and_run'
 alias gl='git log --oneline -n 10'
+
+
+##### My work aliases #####
+alias cdSIM='cd ~/supportsim/skipline/projects/'
+alias cdSKL='cd ~/workspace/skipline/projects/'
+alias cdSYS='cd ~/skiprepo/production/systems/'
