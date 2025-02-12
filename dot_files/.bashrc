@@ -15,7 +15,7 @@
 ### Bashrc Configuration ###
 
 if [ -f ~/.bash_aliases ]; then
-    # shellcheck source=/dev/null
+# shellcheck disable=SC1090
     . ~/.bash_aliases
 fi
 
@@ -707,5 +707,39 @@ start_setupHWCan()
 start_startWireguard()
 {
     sudo wg-quick up /etc/wireguard/wg0.conf
+}
+start_QtCreator()
+{
+    if [ $# -gt 1 ]; then
+        echo "Please pass 0 or 1 files into this command"
+        return 1;
+    elif [ $# -eq 1 ]; then
+        file=$(pwd)"/$1"
+        echo -e "Opening $file in QtCreator...\n"
+
+        ( cd ~/qt_versions/5.15.2/Tools/QtCreator/bin/ && ./qtcreator "$file") &
+    else
+        ( cd ~/qt_versions/5.15.2/Tools/QtCreator/bin/ && ./qtcreator) &
+    fi
+}
+code_Projects()
+{
+    (code ~/workspace/skipline/projects &>/dev/null) &
+}
+code_Skipper()
+{
+    (code ~/workspace/skipline/projects/skipper &>/dev/null) &
+}
+code_GlassCockpit()
+{
+    (code ~/workspace/skipline/projects/GlassCockpit &>/dev/null) &
+}
+code_TruckDesigner()
+{
+    (code ~/workspace/skipline/projects/can-cfg &>/dev/null) &
+}
+code_Systems()
+{
+    (code ~/skiprepo/production/systems &>/dev/null) &
 }
 ######## END WORK SECTION #########
