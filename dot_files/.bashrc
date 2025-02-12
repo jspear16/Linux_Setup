@@ -742,4 +742,8 @@ code_Systems()
 {
     (code ~/skiprepo/production/systems &>/dev/null) &
 }
+code_SkipperSystems()
+{
+    (code ~/workspace/skipline/projects/skipper/systems &>/dev/null) &
+}
 ######## END WORK SECTION #########
