@@ -437,7 +437,7 @@ start_BootloaderGUI()
 }
 start_TruckDesigner()
 {
-    (cd ~/workspace/skipline/projects/can-cfg && ./build/can-cfg &>/dev/null) &
+    (cd ~/workspace/skipline/projects/can-cfg && ./build/can-cfg --svntestonly &>/dev/null) &
 }
 start_MakeSystemUpdate()
 {
@@ -454,10 +454,6 @@ start_DeployManualBinaries()
         return 1
     fi
     (cd ~/workspace/skipline/projects/skipper && ./systems/select_system.py "$system_file" && ./scripts/eclipse_build.sh Deploy _Deploy . && ./scripts/deployBinaries.py)
-}
-start_TruckDesignerNoSVN()
-{
-    (cd ~/workspace/skipline/projects/can-cfg && ./build/can-cfg --svntestonly &>/dev/null) &
 }
 start_UpdateApollo()
 {
