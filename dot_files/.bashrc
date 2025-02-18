@@ -220,6 +220,11 @@ fi
 
 
 ######## WORK SECTION #########
+# Consts
+MONO_DIR=~/workspace/skipline/projects;
+SYS_DIR=~/skiprepo/production/systems;
+SIM_DIR=~/supportsim/skipline/projects;
+
 red_msg()
 {
     echo -en "\e[0;31m"
@@ -744,41 +749,75 @@ code_SkipperSystems()
 }
 svn_status()
 {
-    (cd ~/skiprepo/production/systems; svn status)
+    (cd $SYS_DIR; svn status)
 }
 svn_commit()
 {
-    # Consts
-    SYS_DIR=~/skiprepo/production/systems;
+    # Putting it all in a seperate thread
+    (
+        cd $SYS_DIR;
 
-    # Check that there was at least one system provided
-    if [ $# -eq 0 ]; then
-        echo "Please pass in the name of the systems you want to commit";
-        return 1;
-    fi
-
-    # Check that the systems exist
-    for system in "$@"; do
-        find $SYS_DIR/$system -maxdepth 0 &> /dev/null;
-
-        if [[ "$?" != "0" ]]; then
-            echo "$system not found. Aborting...";
+        # Check that there was at least one system provided
+        if [ $# -eq 0 ]; then
+            echo "Please pass in the name of the systems you want to commit";
             return 1;
         fi
-    done
 
-    # Create the full message for the SVN commit
-    echo "Please provide the commit message below:";
-    read -e msg;
+        # Check that the systems exist and add them to the systems list
+        systems=();
+        for system in "$@"; do
+            find $SYS_DIR/$system -maxdepth 0 &> /dev/null;
 
-    if [ $# -eq 1 ]; then
-        fullMsg="$1: $msg";
-    else
-        fullMsg="$msg";
-    fi
+            if [[ "$?" != "0" ]]; then
+                echo "$system not found. Aborting...";
+                return 1;
+            fi
+            systems+=($(cd $SYS_DIR; echo "$SYS_DIR/$system"*;));
+        done
+        systemsStr="${systems[@]}";
 
-    # Perform the commit
-    echo -e "\nCommitting...";
-    (cd $SYS_DIR; svn commit -m "\"$fullMsg\"" "$@";)
+        # Create the full message for the SVN commit
+        echo "Please provide the commit message below:";
+        read -e msg;
+
+        if [ $# -eq 1 ]; then
+            fullMsg="$1: $msg";
+        else
+            fullMsg="$msg";
+        fi
+
+        # Perform the commit
+        echo -e "\nCommitting...";
+
+        # echo "$systemsStr";
+        svn commit -m "\"$fullMsg\"" $systemsStr;
+    )
+}
+svn_log()
+{
+    (
+        cd $SYS_DIR;
+        if [ $# -eq 0 ]; then
+            svn log -l 10;
+        else
+            svn log -l "$1";
+        fi
+    )
+}
+svn_up()
+{
+    (cd $SYS_DIR; svn up;)
+}
+git_branches()
+{
+    (
+        cd $MONO_DIR;
+        mono_branch=$(git branch --show-current);
+        cd $SIM_DIR;
+        sim_branch=$(git branch --show-current);
+
+        echo -e "${_BOLD}Mono-repo branch:${_RESET}\t$mono_branch";
+        echo -e "${_BOLD}SupportSimUtil branch:${_RESET}\t$sim_branch";
+    )
 }
 ######## END WORK SECTION #########
