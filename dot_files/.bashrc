@@ -742,4 +742,43 @@ code_SkipperSystems()
 {
     (code ~/workspace/skipline/projects/skipper/systems &>/dev/null) &
 }
+svn_status()
+{
+    (cd ~/skiprepo/production/systems; svn status)
+}
+svn_commit()
+{
+    # Consts
+    SYS_DIR=~/skiprepo/production/systems;
+
+    # Check that there was at least one system provided
+    if [ $# -eq 0 ]; then
+        echo "Please pass in the name of the systems you want to commit";
+        return 1;
+    fi
+
+    # Check that the systems exist
+    for system in "$@"; do
+        find $SYS_DIR/$system -maxdepth 0 &> /dev/null;
+
+        if [[ "$?" != "0" ]]; then
+            echo "$system not found. Aborting...";
+            return 1;
+        fi
+    done
+
+    # Create the full message for the SVN commit
+    echo "Please provide the commit message below:";
+    read -e msg;
+
+    if [ $# -eq 1 ]; then
+        fullMsg="$1: $msg";
+    else
+        fullMsg="$msg";
+    fi
+
+    # Perform the commit
+    echo -e "\nCommitting...";
+    (cd $SYS_DIR; svn commit -m "\"$fullMsg\"" "$@";)
+}
 ######## END WORK SECTION #########
