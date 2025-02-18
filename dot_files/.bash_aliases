@@ -145,7 +145,7 @@ alias t='touch'
 alias h='JS_help_info | less -r'
 alias run='JS_shellcheck_and_run'
 alias gl='git log --oneline -n 10'
-
+alias gs='git status'
 
 ##### My work aliases #####
 alias cdsim='cd ~/supportsim/skipline/projects/'
