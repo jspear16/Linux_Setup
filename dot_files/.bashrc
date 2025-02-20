@@ -789,8 +789,16 @@ svn_commit()
         # Perform the commit
         echo -e "\nCommitting...";
 
-        # echo "$systemsStr";
-        svn commit -m "\"$fullMsg\"" $systemsStr;
+        echo "$systemsStr";
+        svn commit -m "$fullMsg" $systemsStr;
+
+        # Prompt to upload to Apollo
+        read -p "Would you like to upload to Apollo? [Y/n] " rspns;
+
+        if [ -z "$rspns" ] || [[ "$rspns" =~ ^[Yy]$ ]]; then
+            echo -e "\nUploading to Apollo...";
+            start_UpdateApollo;
+        fi
     )
 }
 svn_log()
