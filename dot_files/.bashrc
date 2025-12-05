@@ -201,7 +201,7 @@ if ! shopt -oq posix; then
   fi
 fi
 
-
+export PATH=/usr/lib/mxe/usr/bin/:"$PATH"
 
 ######### END PERSONAL SECTION #########
 
@@ -410,7 +410,7 @@ start_StaxViewer()
 }
 start_GrinderTester()
 {
-    ~/workspace/skipline/projects/canutils/build/GrinderTester/GrinderTester &>/dev/null &
+    ~/workspace/skipline/projects/canutils/GrinderTester/GrinderTester &>/dev/null &
 }
 start_CANDisplayV2()
 {
@@ -430,7 +430,9 @@ start_EatonKeypad()
 }
 start_EatonOutput()
 {
-    ~/workspace/skipline/projects/canutils/build/EatonJ1939OutputSim/EatonJ1939OutputSim &>/dev/null &
+    # Often we may want to use the second mRFRM on a system, in which case we need to pass
+    # the argument "--index 1" to allow us to tell the simulator which CAN messages to send
+    ~/workspace/skipline/projects/canutils/build/EatonJ1939OutputSim/EatonJ1939OutputSim "$@" &>/dev/null &
 }
 start_SupportSimUtil()
 {
@@ -616,17 +618,6 @@ svncommit()
     helper_yes_no_dialog "Do you want to commit these files?" || return 1;
     svn commit "$@"
 }
-start_send_file_to_printer()
-{
-    local prompt="Is this file list correct?\n"
-    for file in "$@"; do
-        prompt+="$file\n"
-    done
-    helper_yes_no_dialog "$prompt" || return 1;
-    for file in "$@"; do
-        echo "put \"$file\"" | tee | sftp -b - -i ~/.cancfg/id_rsa_cancfg_apollo cancfg@printstation.skip-line.com
-    done
-}
 start_SetupNewGrinderHDVO()
 {
     ( ~/hdvo-318/code/hdvo-318/scripts/production/hdvo_config_deploy.py --pigeonize "$@")
@@ -642,7 +633,7 @@ start_DownloadSnapshots()
         echo 'Usage start_DownloadSnapshots '\''CVO_1706/2024/04/17/*'\'' /directory/to/place/files'
         return 1
     fi
-    scp -J burner@192.168.3.6 -oPort=5754 "skipline@reportgen2.skip-line.com:/var/www/rg2web/media/datafiles/$1" "$2"
+    scp -J burner@192.168.3.6 "skipline@reportgen2-online.skip-line.com:/var/www/rg2web/media/datafiles/$1" "$2"
 }
 start_mountUSBBinFile()
 {
@@ -672,7 +663,7 @@ start_activate_sim_card()
     local HOLOGRAM_PLAN_ID=1046
     local HOLOGRAM_ZONE=global
     local HOLOGRAM_TAG=8995
-    curl -f --header "Content-Type: application/json" --data "{\"username\":\"hdvoDeployScript\",\"password\":\"hFVWvSX7DTLu\",\"truck_id\":\"${CVO_ID}\",\"serial_num\":\"${PROGSERNUM}\",\"sim\":\"${SIMID}\"}" https://reportgen2.skip-line.com/trucks/append_sim/
+    curl -f --header "Content-Type: application/json" --data "{\"username\":\"hdvoDeployScript\",\"password\":\"hFVWvSX7DTLu\",\"truck_id\":\"${CVO_ID}\",\"serial_num\":\"${PROGSERNUM}\",\"sim\":\"${SIMID}\"}" https://reportgen2-online.skip-line.com/trucks/append_sim/
     ACTIVATION_RESPONSE=$(curl -f --request POST --header "Content-Type: application/json" --data-binary "{\"plan\":${HOLOGRAM_PLAN_ID},\"zone\":\"${HOLOGRAM_ZONE}\",\"orgid\":${HOLOGRAM_ORG_ID},\"tagid\":${HOLOGRAM_TAG}}" "https://dashboard.hologram.io/api/1/links/cellular/sim_${SIMID}/claim" -u apikey:${HOLOGRAM_API_KEY})
     if [ $? -eq 0 ] && [ "x$(echo $ACTIVATION_RESPONSE | jq '.success')" == "xtrue" ]; then
         # Parse the JSON response to get a device ID back out of it
@@ -702,7 +693,6 @@ start_setupHWCan()
         num=$1
     fi
     sudo modprobe can
-    sudo ip link add dev "can$num" type can
     sudo ip link set "can$num" up txqueuelen 1000 type can bitrate 250000 sample-point 0.7 restart-ms 500
 }
 start_startWireguard()
@@ -723,6 +713,298 @@ start_QtCreator()
         ( cd ~/qt_versions/5.15.2/Tools/QtCreator/bin/ && ./qtcreator) &
     fi
 }
+start_mountHDVOUpdate()
+{
+    if [ $# -ne 1 ]; then
+        echo "Please pass 1 update.bin file to mount."
+        return 1;
+    fi
+
+    echo "Attempting to mount $1..."
+
+    # Mount the update file
+    (cd ~/workspace/skipline/projects/utils/UpdateCreator && ./mount_update.sh "$1")
+    ret=$?
+
+    if [ $ret -eq 0 ]; then
+        echo -e "\nSuccessfully mounted $1! Opening up /tmp/hdvoupdate/ in VSCode."
+        # Open up the folder in code to quickly look at the contents
+        (code /tmp/hdvoupdate/)
+    else
+        echo "\nUnsuccessfully mounted $1..."
+    fi
+
+
+}
+start_unmountHDVOUpdate()
+{
+    (cd ~/workspace/skipline/projects/utils/UpdateCreator && ./unmount_update.sh)
+}
+start_ORGCatLatestUIConfig()
+{
+    # ex: start_ORGCatLatestUIConfig CVO_1849
+    # requires key added to skipline account on ORG
+    if [ $# -lt 1 ]; then
+        echo "Usage: start_ORGCatLatestUIConfig [cvo_id]" >&2
+        return 1
+    fi
+    local cvo_id="$1"
+
+    ssh -J burner@apollo.skip-line.com skipline@reportgen2-online.skip-line.com "
+    for file in \$(find /var/www/rg2web/media/datafiles/$cvo_id -type f -iregex '.*\.sklData' -printf '%T@ %p\n' | sort -n --reverse | cut -d' ' -f2-); do
+        zcat \$file | grep --max-count=1 'UIConfig' && break
+    done" | jq -j '."70"."UIConfig"'
+}
+start_ORGDownload()
+{
+#    ex: start_ORGDownload CVO_1261 2025/03/15 '*sklData'
+    local cvo_id="$1"
+    local YYYYslashMMslashDD="$2"
+    local pattern="$3"
+    local output_location="/tmp/$cvo_id"
+
+    # Various checks which give feedback if there is a syntax issue
+    if [ $# -eq 0 ]; then
+        # Provide info if there are no arguments
+        echo -e "No arguments provided. Usage is:\n\t${FUNCNAME[0]} <CVO_ID> <YYYY/MM/DD> <Pattern>"
+        echo -e "Example:\n\t${FUNCNAME[0]} CVO_1261 2025/03/15 '*sklData'"
+        return 1
+    elif [[ ! "$cvo_id" =~ ^CVO_[0-9]+$ ]]; then
+        # Check that CVO ID is only a number
+        echo -e "CVO ID must be in the format of \"CVO_####\". You entered: $cvo_id.\n\nBailing..."
+        return 1
+    elif [[ "$DATE" =~ ^[0-9]{4}/[0-9]{2}/[0-9]{2}$ ]]; then
+        # Check the string format of the date provided
+        echo -e "Invalid date format. Format needed is: YYYY/MM/DD\n\nBailing..."
+        return 1
+    elif [ -z "$output_location" ]; then
+        # Check that CVO ID is only a number
+        echo -e "Output Folder must not be blank.\n\nBailing..."
+        return 1
+    fi
+
+    # Make directory if it doesn't exist
+    if [ ! -d "$output_location" ]; then
+        echo "$output_location does not exist. Making now..."
+        mkdir "$output_location"
+    fi
+
+    echo -e "Attempting to pull data from:\n\tskipline@reportgen2-online.skip-line.com:/var/www/rg2web/media/datafiles/$cvo_id/$YYYYslashMMslashDD/$pattern\nand put it in the output folder:\n\t$output_location\n"
+
+    scp -J burner@apollo.skip-line.com skipline@reportgen2-online.skip-line.com:/var/www/rg2web/media/datafiles/"$cvo_id"/"$YYYYslashMMslashDD"/"$pattern" "$output_location"
+
+    # If successful, ask if they want to open DisplayGCData
+    if [ $? -eq 0 ]; then
+        read -p "Would you like to open DisplayGCData? " ans;
+        if [[ "$ans" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+            ~/workspace/skipline/projects/canutils/DisplayGCData/DisplayGCData
+        fi
+    fi
+}
+start_EchoTruckInfo()
+{
+    local sklDataFolderPath="$1"
+
+    # Provide info if there are bad arguments
+    if [ $# -ne 1 ]; then
+        echo -e "No arguments provided. Usage is:\n\t${FUNCNAME[0]} <PATH_TO_SKLDATA_FOLDER>"
+        echo -e "Example:\n\t${FUNCNAME[0]} /tmp/CVO_1486/"
+        return 1
+    elif [ ! -d "$sklDataFolderPath" ]; then
+        echo -e "$sklDataFolderPath does not exist.\n\nBailing..."
+        return 1
+    fi
+
+    # Keys
+    local keyConfig=25
+    local keyVersion=26
+    local keyTruckID=27
+    local keyTruckName=28
+    local keyDeviceVersions=64
+    local keyNodeID=65
+    local keySerialNumber=66
+    local keySHA=134
+
+    # IDs
+    local idCoreSkipper=26
+
+    # Returns
+    local GCVersion="Unknown"
+    local truckID="Unknown"
+    local truckName="Unknown"
+    local skipperVersion="Unknown"
+    local skipperSerial="Unknown"
+    local shaHex="Unknown"
+    local shaDecimal
+
+    # Make the temporary file to put the received json information into
+    tmpFile=$(mktemp)
+
+    # This could take some of the work from start_ORGDownload() by scp the data in this function as well
+    # ssh -J burner@apollo.skip-line.com -oPort=5754 skipline@reportgen2.skip-line.com
+
+    # We want to get the device skipper information so keep looking until we find a snapshot with that info
+    for file in $(find "$sklDataFolderPath" -type f -iregex '.*\.sklData' -printf '%T@ %p\n' | sort -n --reverse | cut -d' ' -f2-); do
+        zcat "$file" | grep --max-count=1 "\"$keyNodeID\":$keyVersion" && break;
+    done > "$tmpFile"
+
+    # Collect the general system info
+    GCVersion=$(jq -j ".\"$keyConfig\".\"$keyVersion\" " "$tmpFile")    # Config/Version
+    truckID=$(jq -j ".\"$keyConfig\".\"$keyTruckID\" " "$tmpFile")      # Config/TruckID
+    truckName=$(jq -j ".\"$keyConfig\".\"$keyTruckName\" " "$tmpFile")  # Config/TruckName
+
+    # Loop through all of the devices until the core skipper is found and get it's information
+    totalDevices=$(jq ".\"$keyConfig\".\"$keyDeviceVersions\" | length" "$tmpFile")
+
+    for (( i=0; i<"$totalDevices"; i++ )); do
+        if [[ $(jq ".\"$keyConfig\".\"$keyDeviceVersions\"[$i].\"$keyNodeID\"" "$tmpFile") == "$idCoreSkipper" ]]; then
+            skipperVersion=$(jq -j ".\"$keyConfig\".\"$keyDeviceVersions\"[$i].\"$keyVersion\"" "$tmpFile")     # Config/DeviceVersions/Version
+            skipperSerial=$(jq -j ".\"$keyConfig\".\"$keyDeviceVersions\"[$i].\"$keySerialNumber\"" "$tmpFile") # Config/DeviceVersions/Serial
+            shaDecimal=$(jq -j ".\"$keyConfig\".\"$keyDeviceVersions\"[$i].\"$keySHA\"" "$tmpFile")             # Config/DeviceVersions/SHA
+            shaHex=$(printf "%x" "$shaDecimal")
+            break;
+        fi
+    done
+
+    echo -e "
+Glass Cockpit Version:  $GCVersion
+Truck ID:               $truckID
+Truck Name:             $truckName
+Skipper Version:        $skipperVersion
+Skipper Serial Number:  $skipperSerial
+Git SHA:                $shaHex
+"
+
+    rm "$tmpFile"
+}
+start_SendFilesToPrinter()
+{
+    # Check that there was at least one file provided
+    if [ $# -eq 0 ]; then
+        echo "Please pass in the name of the files you want to send to the printer";
+        return 1;
+    fi
+
+    # Check that all of the files exist first
+    for file in "$@"; do
+        if [ ! -f "$file" ]; then
+            echo "$file does not exist";
+            return 1;
+        fi
+    done
+
+    # Ask if the list is correct
+    local prompt="---------------------------------\n"
+    for file in "$@"; do
+        prompt+="$file\n"
+    done
+    prompt+="---------------------------------\nIs the above file list correct?"
+    helper_yes_no_dialog "$prompt" || return 1;
+
+    # put the files onto the printer one at a time
+    for file in "$@"; do
+        echo "put \"$file\"" | tee | sftp -b - -i ~/.cancfg/id_rsa_cancfg_apollo cancfg@printstation.skip-line.com
+    done
+}
+start_DisplayGCData()
+{
+    ( ~/workspace/skipline/projects/canutils/DisplayGCData/DisplayGCData) &
+}
+start_RunGC()
+{
+    # Check that there was at least one file provided
+    if [ $# -eq 0 ]; then
+        echo "Please pass the system name of the GC simulator you would like to simulate (must already exist)"
+        echo -e "Usage is:\n\t${FUNCNAME[0]} <PATH_TO_GC_FOLDER> [OPTIONAL_CAN_BUS_NUM]\nExample:\n\t${FUNCNAME[0]} SC12_A25119_MANUAL 1"
+        return 1
+    fi
+
+    # Vars
+    sysName=$1
+    sysPath=/tmp/supportsim-1000/$sysName
+    GCProgram=~/workspace/skipline/projects/GlassCockpit/build/src/GlassCockpit
+
+    # Gather the CAN BUS index if it was passed
+    canBusIdx=0
+    if [ $# -eq 2 ]; then
+        canBusIdx=$(($2))
+    fi
+
+    # Check that the simulator folder exists
+    if [ -d "$sysPath/dl18/" ]; then
+        envPath=$sysPath/dl18/
+    elif [ -d "$sysPath/hdvo/" ]; then
+        envPath=$sysPath/hdvo/
+    else
+        echo "Neither $sysPath/hdvo/ nor $sysPath/dl18/ exist. Please make sure the simulator exists..."
+        return 1
+    fi
+
+    # Check that the GC program exists
+    if [ ! -f "$GCProgram" ]; then
+        echo "The GC program at $GCProgram does not exist. Please build it..."
+        return 1
+    fi
+
+    # Actually run the GC program with the provided environment path
+    SKLCORE_ROOT="$envPath" CAN_BUS="can$canBusIdx" "$GCProgram"
+}
+start_MongoEquipmentInfo()
+{
+    if [ $# -lt 1 ]; then
+        echo "Usage: start_MongoEquipmentInfo system_name" 1>&2;
+        return 1;
+    fi;
+    local cvo_id="$(extract_cvo_id "$1")"
+    if [ -z "$cvo_id" ]; then
+        echo "Failed to extract cvo_id"
+        return 1
+    fi
+    echo '====== SRO ORGS ======'
+    mongosh "mongodb+srv://srp-prod.4yw3k.mongodb.net/Skip-Line" --apiVersion 1 --username "$MONGO_USERNAME" --password "$MONGO_PASSWORD" --eval "
+    printjson(db.organizations.find({ \"equipment\": \"$cvo_id\" }).toArray())
+    " | grep -E '^\s+name: '
+    echo '====== EQUIPMENT INFO ======'
+    mongosh "mongodb+srv://srp-prod.4yw3k.mongodb.net/Skip-Line" --apiVersion 1 --username "$MONGO_USERNAME" --password "$MONGO_PASSWORD" --eval "
+    printjson(db.equipment.find({ \"serial_number\": \"$cvo_id\" }).toArray())
+    "
+}
+
+start_MongoFindRecordWithDeviceSerialNumber()
+{
+    if [ $# -lt 1 ]; then
+        echo "Usage: start_MongoEquipmentInfo serial" 1>&2;
+        return 1;
+    fi;
+
+    local serial_number="$1"
+
+    mongosh "mongodb+srv://srp-prod.4yw3k.mongodb.net/Skip-Line" --apiVersion 1 --username "$MONGO_USERNAME" --password "$MONGO_PASSWORD" --eval "
+    printjson(db.equipment.find({ \"devices\": { \$elemMatch: { \"serial_number\": \"$serial_number\" } } }).toArray())
+    "
+}
+
+extract_cvo_id() {
+    local folder_name="$(basename $1)"
+    local base_dir="$HOME/skiprepo/production/systems"
+    local target_dir="$base_dir/$folder_name/variants"
+    local cvo_id=""
+
+    if [[ -d "$target_dir" ]]; then
+        # Check for logging folder first
+        if [[ -f "$target_dir/logging/loggingconfig.json" ]]; then
+            cvo_id=$(jq -r '.truckID' "$target_dir/logging/loggingconfig.json")
+        elif [[ -f "$target_dir/cellular_hdvo/logging/loggingconfig.json" ]]; then
+            cvo_id=$(jq -r '.truckID' "$target_dir/cellular_hdvo/logging/loggingconfig.json")
+        fi
+    fi
+
+    if [[ -n "$cvo_id" ]]; then
+        echo "$cvo_id"
+    else
+        return 1
+    fi
+}
 code_Projects()
 {
     (code ~/workspace/skipline/projects &>/dev/null) &
@@ -739,6 +1021,10 @@ code_TruckDesigner()
 {
     (code ~/workspace/skipline/projects/can-cfg &>/dev/null) &
 }
+code_CANLogger()
+{
+    (code ~/workspace/skipline/projects/canutils/CANLogger &>/dev/null) &
+}
 code_Systems()
 {
     (code ~/skiprepo/production/systems &>/dev/null) &
@@ -747,12 +1033,54 @@ code_SkipperSystems()
 {
     (code ~/workspace/skipline/projects/skipper/systems &>/dev/null) &
 }
-svn_status()
+code_Simulator()
 {
+    (code /tmp/supportsim-1000/ && code ~/workspace/SupportSimUtil/mainwindow.py) &
+}
+code_Bash()
+{
+    (
+        code -n;
+        code ~/.bashrc;
+        code ~/.bash_aliases;
+    ) &
+}
+code_Legacy()
+{
+    code ~/skiprepo/legacy;
+}
+build_TruckDesigner()
+{
+    cd ~/workspace/skipline/projects/can-cfg || exit;
+    ./scripts/command_line_dev_build -q;
+    cd - &> /dev/null;
+}
+build_GlassCockpit()
+{
+    cd ~/workspace/skipline/projects/GlassCockpit || exit;
+    ./scripts/command_line_dev_build -q;
+    cd - &> /dev/null;
+}
+build_Skipper()
+{
+    cd ~/workspace/skipline/projects/skipper || exit;
+
+    # If --select is passed, then run the select system first
+    if [ "$1" == "--select" ]; then
+        ./systems/select_system.py
+    fi
+
+    ./scripts/command_line_dev_build -q;
+    cd - &> /dev/null;
+}
+sstatus()
+{
+    # SVN status
     (cd $SYS_DIR; svn status)
 }
-svn_commit()
+scommit()
 {
+    # SVN commit
     # Putting it all in a seperate thread
     (
         cd $SYS_DIR;
@@ -793,16 +1121,17 @@ svn_commit()
         svn commit -m "$fullMsg" $systemsStr;
 
         # Prompt to upload to Apollo
-        read -p "Would you like to upload to Apollo? [Y/n] " rspns;
+        read -p "Would you like to upload to Apollo? [y/N] " rspns;
 
-        if [ -z "$rspns" ] || [[ "$rspns" =~ ^[Yy]$ ]]; then
+        if [[ "$rspns" =~ ^[Yy]$ ]]; then
             echo -e "\nUploading to Apollo...";
             start_UpdateApollo;
         fi
     )
 }
-svn_log()
+slog()
 {
+    # SVN log
     (
         cd $SYS_DIR;
         if [ $# -eq 0 ]; then
@@ -812,8 +1141,9 @@ svn_log()
         fi
     )
 }
-svn_up()
+supdate()
 {
+    # SVN update
     (cd $SYS_DIR; svn up;)
 }
 git_branches()
@@ -826,6 +1156,39 @@ git_branches()
 
         echo -e "${_BOLD}Mono-repo branch:${_RESET}\t$mono_branch";
         echo -e "${_BOLD}SupportSimUtil branch:${_RESET}\t$sim_branch";
+    )
+}
+git_new()
+{
+    if [ ! $# -eq 1 ]; then
+        echo "Please provide only one argument, that being the name of the branch to create"
+    fi
+
+    (
+        cd $MONO_DIR
+        git checkout main > /dev/null
+        git pull > /dev/null
+
+        # Check to make sure something already made doesn't have an attempt at being readded
+        check_remote=$(git branch -r --list "origin/$1")
+        check_all=$(git branch -a --list "$1")
+
+        if [[ -n "$check_remote" || -n "$check_all" ]]; then
+            echo "There already exists a branch with that name. Exiting..."
+            return 1
+        fi
+
+        # Create the new branch
+        echo -e "Creating the $1 branch in the monorepo directory...\n"
+        git checkout -b "$1" > /dev/null
+
+        # Prompt to upload to origin (GitHub)
+        read -p "Would you like to push the new branch to GitHub? [y/N] " rspns
+
+        if [[ "$rspns" =~ ^[Yy]$ ]]; then
+            echo -e "\nUploading to GitHub...\n"
+            git push -u origin "$1" > /dev/null
+        fi
     )
 }
 ######## END WORK SECTION #########
