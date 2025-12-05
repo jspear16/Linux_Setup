@@ -146,8 +146,12 @@ alias h='JS_help_info | less -r'
 alias run='JS_shellcheck_and_run'
 alias gl='git log --oneline -n 10'
 alias gs='git status'
+alias gp='git pull'
+alias open='xdg-open .'
+alias clip='xclip -selection clipboard'   # There is a command called clip that this is overriding
 
 ##### My work aliases #####
 alias cdsim='cd ~/supportsim/skipline/projects/'
 alias cdskl='cd ~/workspace/skipline/projects/'
 alias cdsys='cd ~/skiprepo/production/systems/'
+alias rmtmp='rm -rf /tmp/supportsim-1000/'
