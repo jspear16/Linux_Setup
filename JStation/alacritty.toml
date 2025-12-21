@@ -1,0 +1,17 @@
+[font]
+normal = { family = "RecMonoDuotone Nerd Font Mono", style = "Regular" }
+size = 12.5
+
+[window]
+opacity = 0.98
+
+[cursor]
+style = "Beam"
+
+[colors.primary]
+background = "0x1e1e2e"
+foreground = "0xcdd6f4"
+
+[shell]
+program = "/usr/bin/tmux"
+args = ["new-session", "-A", "-s", "default"]
