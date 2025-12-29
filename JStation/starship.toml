@@ -1,6 +1,6 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-format = "[](fg:color_yellow)$directory[](fg:color_yellow) $character"
+format = "[](fg:color_orange)$username[@](bg:color_orange fg:color_fg0)$hostname[](bg:color_yellow fg:color_orange)$directory[](fg:color_yellow) "
 palette = 'gruvbox_dark'
 
 [palettes.gruvbox_dark]
@@ -47,7 +47,13 @@ Pop = ""
 show_always = true
 style_user = "bg:color_orange fg:color_fg0"
 style_root = "bg:color_orange fg:color_fg0"
-format = '[ $user ]($style)'
+format = '[$user]($style)'
+
+[hostname]
+ssh_only = false
+style = "bg:color_orange fg:color_fg0"
+format = '[$hostname ]($style)'
+
 
 [directory]
 style = "bg:color_yellow"

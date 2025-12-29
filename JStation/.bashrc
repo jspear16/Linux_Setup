@@ -213,16 +213,4 @@ code_JACE()
 # -------------------------------
 eval "$(starship init bash)"
 
-# Function to print timestamp before running a command
-show_command_timestamp() {
-    # Only show for normal commands, not for prompts like PS1
-    if [[ "$BASH_COMMAND" != "$PROMPT_COMMAND" ]]; then
-        tput cuu1
-        tput el
-        echo -e "${_PUR}[$(date '+%H:%M:%S.%3N')]${_RESET}${_BOLD} $BASH_COMMAND ${_RESET}"
-    fi
-}
-
-# Set DEBUG trap
-trap show_command_timestamp DEBUG
 ######### END PERSONAL SECTION #########
