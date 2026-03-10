@@ -201,7 +201,7 @@ if ! shopt -oq posix; then
   fi
 fi
 
-export PATH=/usr/lib/mxe/usr/bin/:"$PATH"
+export PATH=/usr/NX/bin:/usr/lib/mxe/usr/bin/:"$PATH"
 
 ######### END PERSONAL SECTION #########
 
@@ -1048,6 +1048,10 @@ code_Bash()
 code_Legacy()
 {
     code ~/skiprepo/legacy;
+}
+code_Buildroot_HDVONG()
+{
+    code ~/workspace/buildroot-hdvong
 }
 build_TruckDesigner()
 {
