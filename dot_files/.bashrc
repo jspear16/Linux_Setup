@@ -1056,6 +1056,7 @@ code_Buildroot_HDVONG()
 build_TruckDesigner()
 {
     cd ~/workspace/skipline/projects/can-cfg || exit;
+    touch can-cfg.qrc;
     ./scripts/command_line_dev_build -q;
     cd - &> /dev/null;
 }
